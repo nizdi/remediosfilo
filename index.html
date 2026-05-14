@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Arrumador de Remedios</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ee;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #667085;
+      --line: #d8d1c6;
+      --green: #277a46;
+      --green-dark: #185c32;
+      --yellow: #ffd15c;
+      --blue: #5b8def;
+      --red: #bd2f2f;
+      --shadow: 0 16px 40px rgba(46, 35, 23, 0.13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100svh;
+      width: min(100%, 520px);
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .counter {
+      min-width: 74px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .card {
+      display: grid;
+      grid-template-rows: auto minmax(220px, 1fr) auto auto;
+      gap: 14px;
+      min-height: 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .medicine {
+      min-height: 112px;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .medicine-name {
+      margin: 0;
+      font-size: clamp(1.45rem, 8vw, 2.25rem);
+      line-height: 1.05;
+      font-weight: 900;
+      text-wrap: balance;
+      overflow-wrap: anywhere;
+    }
+
+    .dose {
+      color: var(--muted);
+      font-size: clamp(1.05rem, 5vw, 1.45rem);
+      font-weight: 800;
+    }
+
+    .pill-area {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      padding: 8px 0;
+    }
+
+    .pill-stack {
+      display: grid;
+      place-items: center;
+      gap: 16px;
+    }
+
+    .pill {
+      position: relative;
+      width: min(54vw, 240px);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: #fbfbfb;
+      border: 5px solid #c9c1b5;
+      box-shadow:
+        inset -16px -18px 26px rgba(0, 0, 0, 0.08),
+        inset 12px 14px 24px rgba(255, 255, 255, 0.92),
+        0 18px 34px rgba(63, 49, 35, 0.18);
+    }
+
+    .pill::after {
+      content: "";
+      position: absolute;
+      left: calc(50% - 2px);
+      top: 9%;
+      width: 4px;
+      height: 82%;
+      border-radius: 999px;
+      background: #a9a197;
+    }
+
+    .pill.half {
+      background: conic-gradient(from 90deg, #fbfbfb 0 180deg, transparent 180deg 360deg);
+      border-color: transparent transparent transparent #c9c1b5;
+      box-shadow: 0 18px 34px rgba(63, 49, 35, 0.18);
+    }
+
+    .pill.half::before {
+      content: "";
+      position: absolute;
+      inset: 0 50% 0 0;
+      border: 5px solid #c9c1b5;
+      border-right: 0;
+      border-radius: 999px 0 0 999px;
+      pointer-events: none;
+    }
+
+    .pill.half::after {
+      left: calc(50% - 2px);
+      top: 4%;
+      height: 92%;
+      background: #726a61;
+    }
+
+    .pill-label {
+      width: min(100%, 330px);
+      min-height: 58px;
+      display: grid;
+      place-items: center;
+      padding: 10px 14px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      background: #faf8f3;
+      text-align: center;
+      font-size: clamp(1.2rem, 6vw, 1.7rem);
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .times {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .time {
+      min-height: 62px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      font-size: clamp(1.1rem, 5vw, 1.45rem);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .time.off {
+      background: #eee8dd;
+      color: #9c9388;
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+
+    .morning {
+      background: var(--yellow);
+      border-color: #d7a837;
+      color: #3d2b00;
+    }
+
+    .night {
+      background: var(--blue);
+      border-color: #3267c5;
+      color: #ffffff;
+    }
+
+    .special {
+      min-height: 54px;
+      display: grid;
+      place-items: center;
+      padding: 10px 12px;
+      border: 2px solid rgba(189, 47, 47, 0.35);
+      border-radius: 8px;
+      background: #fff1f1;
+      color: var(--red);
+      text-align: center;
+      font-size: clamp(1rem, 4.5vw, 1.28rem);
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .special:empty {
+      display: none;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .primary,
+    .secondary {
+      min-height: 64px;
+      border-radius: 8px;
+      border: 0;
+      font-size: clamp(1.08rem, 5vw, 1.45rem);
+      font-weight: 900;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .primary {
+      background: var(--green);
+      color: #ffffff;
+      box-shadow: 0 8px 0 var(--green-dark);
+    }
+
+    .primary:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 var(--green-dark);
+    }
+
+    .secondary {
+      width: 72px;
+      border: 2px solid var(--line);
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .done {
+      grid-template-rows: 1fr auto;
+      align-content: center;
+      text-align: center;
+    }
+
+    .done .medicine {
+      min-height: 0;
+    }
+
+    .done-mark {
+      width: min(48vw, 190px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      margin: 20px auto;
+      border-radius: 999px;
+      background: #dff4e5;
+      color: var(--green);
+      font-size: min(24vw, 6.5rem);
+      font-weight: 900;
+    }
+
+    @media (max-height: 650px) {
+      .card {
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .medicine {
+        min-height: 84px;
+      }
+
+      .pill-area {
+        min-height: 170px;
+      }
+
+      .pill {
+        width: min(44vw, 170px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1 class="title">Arrumador de Remedios</h1>
+      <div class="counter" id="counter">1/1</div>
+    </header>
+
+    <section class="card" id="card" aria-live="polite">
+      <div class="medicine">
+        <h2 class="medicine-name" id="medicineName"></h2>
+        <div class="dose" id="dose"></div>
+      </div>
+
+      <div class="pill-area">
+        <div class="pill-stack">
+          <div class="pill" id="pillImage" aria-hidden="true"></div>
+          <div class="pill-label" id="pillLabel"></div>
+        </div>
+      </div>
+
+      <div class="times" id="times">
+        <div class="time morning" id="morning">MANHA</div>
+        <div class="time night" id="night">NOITE</div>
+      </div>
+
+      <div class="special" id="special"></div>
+    </section>
+
+    <div class="actions">
+      <button class="primary" id="nextButton" type="button">CONFIRMAR</button>
+      <button class="secondary" id="backButton" type="button" aria-label="Voltar">&lt;</button>
+    </div>
+  </main>
+
+  <script>
+    /*
+      EDITAR AQUI: lista de medicamentos.
+      frequencia pode ser: "manha", "noite", "12/12h" ou "".
+      comprimidos pode ser: "1" ou "1/2".
+    */
+    const MEDICAMENTOS = [
+      {
+        nome: "Carvedilol",
+        dosagem: "6,25mg",
+        comprimidos: "1",
+        frequencia: "12/12h",
+        dias: ""
+      },
+      {
+        nome: "Rivastigmina (Hemitartarato de rivastigmina)",
+        dosagem: "3 mg",
+        comprimidos: "1",
+        frequencia: "12/12h",
+        dias: ""
+      },
+      {
+        nome: "Cloridrato de Memantina (Alois)",
+        dosagem: "10mg",
+        comprimidos: "1",
+        frequencia: "12/12h",
+        dias: ""
+      },
+      {
+        nome: "Rosuvastatina Calcica",
+        dosagem: "10 mg",
+        comprimidos: "1/2",
+        frequencia: "noite",
+        dias: ""
+      },
+      {
+        nome: "Citalopram (Procimax)",
+        dosagem: "20 mg",
+        comprimidos: "1",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "Mononitrato de isossorbida (Monocordil)",
+        dosagem: "20 mg",
+        comprimidos: "1/2",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "Apixabana (Eliquis)",
+        dosagem: "2,5 mg",
+        comprimidos: "1",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "MecoBe (B12)",
+        dosagem: "",
+        comprimidos: "1",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "Vitamina D - 2000U",
+        dosagem: "",
+        comprimidos: "1",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "Cloridrato de Amiodarona",
+        dosagem: "200mg",
+        comprimidos: "1",
+        frequencia: "manha",
+        dias: ""
+      },
+      {
+        nome: "Risedronato sodico (Rissedross/Osteotrat)",
+        dosagem: "35mg",
+        comprimidos: "1",
+        frequencia: "",
+        dias: "APENAS DOMINGO EM JEJUM"
+      }
+    ];
+
+    const state = {
+      index: 0
+    };
+
+    const card = document.querySelector("#card");
+    const counter = document.querySelector("#counter");
+    const medicineName = document.querySelector("#medicineName");
+    const dose = document.querySelector("#dose");
+    const pillImage = document.querySelector("#pillImage");
+    const pillLabel = document.querySelector("#pillLabel");
+    const morning = document.querySelector("#morning");
+    const night = document.querySelector("#night");
+    const special = document.querySelector("#special");
+    const nextButton = document.querySelector("#nextButton");
+    const backButton = document.querySelector("#backButton");
+
+    function setTimeIndicator(element, enabled) {
+      element.classList.toggle("off", !enabled);
+    }
+
+    function showDone() {
+      card.className = "card done";
+      counter.textContent = `${MEDICAMENTOS.length}/${MEDICAMENTOS.length}`;
+      medicineName.textContent = "FINALIZADO";
+      dose.textContent = "Todos os remedios foram conferidos.";
+      document.querySelector(".pill-area").innerHTML = '<div class="done-mark">OK</div>';
+      document.querySelector("#times").style.display = "none";
+      special.textContent = "";
+      nextButton.textContent = "REINICIAR";
+      backButton.disabled = false;
+    }
+
+    function restorePillArea() {
+      const pillArea = document.querySelector(".pill-area");
+
+      if (!pillArea.querySelector("#pillImage")) {
+        pillArea.innerHTML = `
+          <div class="pill-stack">
+            <div class="pill" id="pillImage" aria-hidden="true"></div>
+            <div class="pill-label" id="pillLabel"></div>
+          </div>
+        `;
+      }
+    }
+
+    function render() {
+      if (state.index >= MEDICAMENTOS.length) {
+        showDone();
+        return;
+      }
+
+      restorePillArea();
+
+      const currentPill = document.querySelector("#pillImage");
+      const currentPillLabel = document.querySelector("#pillLabel");
+      const med = MEDICAMENTOS[state.index];
+      const isHalf = med.comprimidos === "1/2";
+      const takesMorning = med.frequencia === "manha" || med.frequencia === "12/12h";
+      const takesNight = med.frequencia === "noite" || med.frequencia === "12/12h";
+
+      card.className = "card";
+      document.querySelector("#times").style.display = "";
+      counter.textContent = `${state.index + 1}/${MEDICAMENTOS.length}`;
+      medicineName.textContent = med.nome.toUpperCase();
+      dose.textContent = med.dosagem;
+      currentPill.className = isHalf ? "pill half" : "pill";
+      currentPillLabel.textContent = isHalf ? "COLOCAR MEIO COMPRIMIDO" : "COLOCAR 1 COMPRIMIDO INTEIRO";
+      setTimeIndicator(morning, takesMorning);
+      setTimeIndicator(night, takesNight);
+      special.textContent = med.dias;
+      nextButton.textContent = "CONFIRMAR";
+      backButton.disabled = state.index === 0;
+    }
+
+    nextButton.addEventListener("click", () => {
+      if (state.index >= MEDICAMENTOS.length) {
+        state.index = 0;
+      } else {
+        state.index += 1;
+      }
+
+      render();
+    });
+
+    backButton.addEventListener("click", () => {
+      if (state.index > 0) {
+        state.index -= 1;
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
